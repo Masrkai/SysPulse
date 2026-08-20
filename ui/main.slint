@@ -1,5 +1,5 @@
 // main.slint
-// Main UI declaration for SST-Systems_Stress_Tester.
+// Main UI declaration for SysPulse.
 
 import { Button, Slider, ProgressIndicator } from "std-widgets.slint";
 import { ConsoleColors } from "./colors.slint";
@@ -8,7 +8,7 @@ import { ThreadBar } from "./thread_bar.slint";
 import { Panel } from "./panel.slint";
 
 export component StressTestWindow inherits Window {
-    title: "System Stress Tester";
+    title: "SysPulse";
     width: 700px;
     height: 640px;
     background: #101010;
@@ -51,7 +51,7 @@ export component StressTestWindow inherits Window {
             VerticalLayout {
                 spacing: 2px;
                 Text {
-                    text: "System Stress Tester";
+                    text: "SysPulse";
                     font-size: 18px;
                     font-weight: 500;
                     color: ConsoleColors.magenta;

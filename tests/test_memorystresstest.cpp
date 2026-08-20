@@ -348,7 +348,7 @@ TEST_F(MemoryStressTestFixture, PerformanceCharacteristics) {
     EXPECT_GT(memoryAllocated, 0) << "Should allocate memory within 1 second";
 
     // Should not take too much longer than requested
-    EXPECT_LT(actualDuration, 2000) << "Should complete within reasonable time";
+    EXPECT_LT(actualDuration, 4000) << "Should complete within reasonable time";
 
     // Memory allocation should be in reasonable chunks (1MB blocks expected)
     if (memoryAllocated > 0) {

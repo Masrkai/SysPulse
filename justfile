@@ -1,4 +1,4 @@
-# SystemStressTest Justfile
+# SysPulse Justfile
 # Requires: c++ (g++/clang++), curl, tar, gtest
 # The Slint GUI toolchain is fetched automatically (no cmake/rust needed)
 
@@ -42,11 +42,11 @@ gtest_url := "https://github.com/google/googletest/releases/download/v" + gtest_
 build:
     #!/usr/bin/env bash
     mkdir -p {{build_dir}}
-    {{cxx}} {{base_flags}} -O2 -DNDEBUG {{main_srcs}} -o {{build_dir}}/SystemStressTest -lpthread
+    {{cxx}} {{base_flags}} -O2 -DNDEBUG {{main_srcs}} -o {{build_dir}}/SysPulse -lpthread
 
 # Run the main executable
 run: build
-    ./{{build_dir}}/SystemStressTest
+    ./{{build_dir}}/SysPulse
 
 # Build unit tests
 test-build:
@@ -59,7 +59,7 @@ test-build:
     # 1. Check if gtest is available in system packages using which
     if which gtest >/dev/null 2>&1 || which gtest-config >/dev/null 2>&1 || pkg-config --exists gtest >/dev/null 2>&1; then
         echo "Found system gtest package."
-        {{cxx}} {{base_flags}} {{lib_srcs}} {{test_srcs}} -o {{build_dir}}/SystemStressTest_tests -lgtest -lgtest_main -lpthread
+        {{cxx}} {{base_flags}} {{lib_srcs}} {{test_srcs}} -o {{build_dir}}/SysPulse_tests -lgtest -lgtest_main -lpthread
     else
         echo "System gtest not found via which."
         mkdir -p {{external_libs_dir}}
@@ -87,18 +87,18 @@ test-build:
             {{lib_srcs}} {{test_srcs}} \
             "${gtest_dir}/build/lib/libgtest.a" \
             "${gtest_dir}/build/lib/libgtest_main.a" \
-            -o {{build_dir}}/SystemStressTest_tests -lpthread
+            -o {{build_dir}}/SysPulse_tests -lpthread
     fi
 
 # Run unit tests
 test: test-build
-    ./{{build_dir}}/SystemStressTest_tests
+    ./{{build_dir}}/SysPulse_tests
 
 # Build the main executable (Profiling mode)
 build-profiling:
     #!/usr/bin/env bash
     mkdir -p {{build_dir}}
-    {{cxx}} {{base_flags}} -O2 -g3 -fno-omit-frame-pointer -fno-inline-small-functions -DPROFILING_BUILD {{main_srcs}} -o {{build_dir}}/SystemStressTest_profiling -lpthread
+    {{cxx}} {{base_flags}} -O2 -g3 -fno-omit-frame-pointer -fno-inline-small-functions -DPROFILING_BUILD {{main_srcs}} -o {{build_dir}}/SysPulse_profiling -lpthread
 
 # Build the GUI executable
 gui-build:
@@ -118,7 +118,7 @@ gui-build:
 
         # Build the GUI using system slint
         {{cxx}} -std=c++20 -Wall -Wextra -Iinclude -I{{build_dir}} \
-            src/main_gui.cpp {{lib_srcs}} -o {{build_dir}}/sst_gui -lslint_cpp -lpthread
+            src/main_gui.cpp {{lib_srcs}} -o {{build_dir}}/syspulse_gui -lslint_cpp -lpthread
     else
         echo "System slint-compiler not found via which."
         mkdir -p {{external_libs_dir}}/slint
@@ -141,7 +141,7 @@ gui-build:
         # Build the GUI (Slint 1.17 requires C++20)
         {{cxx}} -std=c++20 -Wall -Wextra -Iinclude -I{{build_dir}} -I"${slint_dir}/include/slint" \
             -L"${slint_dir}/lib" -Wl,-rpath,"${slint_dir}/lib" \
-            src/main_gui.cpp {{lib_srcs}} -o {{build_dir}}/sst_gui -lslint_cpp -lpthread
+            src/main_gui.cpp {{lib_srcs}} -o {{build_dir}}/syspulse_gui -lslint_cpp -lpthread
     fi
 
 # Run the GUI
@@ -150,9 +150,9 @@ gui: gui-build
     set -euo pipefail
     slint_dir="{{external_libs_dir}}/slint/Slint-cpp-{{slint_version}}-Linux-{{slint_arch}}"
     if [ -d "${slint_dir}" ] && [ -d "${slint_dir}/lib" ]; then
-        LD_LIBRARY_PATH="${slint_dir}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ./{{build_dir}}/sst_gui
+        LD_LIBRARY_PATH="${slint_dir}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ./{{build_dir}}/syspulse_gui
     else
-        ./{{build_dir}}/sst_gui
+        ./{{build_dir}}/syspulse_gui
     fi
 
 # --- Utilities ---

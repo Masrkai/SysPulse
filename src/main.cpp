@@ -9,7 +9,7 @@
 #include <chrono>
 #include <thread>
 
-class SystemStressTestManager {
+class SysPulseManager {
 private:
     static constexpr int BAR_WIDTH = 30;
     static constexpr int TEST_DURATION = 30;
@@ -149,7 +149,7 @@ private:
     }
 
 public:
-    SystemStressTestManager() : timeManager(TimeManager::getInstance()) {}
+    SysPulseManager() : timeManager(TimeManager::getInstance()) {}
 
     void run() {
         // Initialize the console
@@ -157,7 +157,7 @@ public:
 
         // Display the start banner
         std::cout << ConsoleColors::MAGENTA
-                  << "\n=== System Stress Test Starting ==="
+                  << "\n=== SysPulse Starting ==="
                   << ConsoleColors::RESET << std::endl;
 
         // Display warning message
@@ -240,7 +240,7 @@ public:
 };
 
 int main() {
-    SystemStressTestManager testManager;
+    SysPulseManager testManager;
     testManager.run();
     return 0;
 }

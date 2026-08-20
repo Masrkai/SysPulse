@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-# Profiling script for SystemStressTest
+# Profiling script for SysPulse
 # Generates 3 focused flame graphs: CPU, Memory, and Function Call patterns
 
 set -e
 
-PROJECT_NAME="SystemStressTest"
+PROJECT_NAME="SysPulse_profiling"
 PROFILING_DIR="profiling"
 RESULTS_DIR="profiling/perf_results"
 FLAMEGRAPH_DIR="flamegraphs"
@@ -18,7 +18,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}=== System Stress Test Profiling Suite ===${NC}"
+echo -e "${BLUE}=== SysPulse Profiling Suite ===${NC}"
 
 # Check if executable exists
 if [ ! -f "$EXECUTABLE" ]; then

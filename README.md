@@ -1,4 +1,4 @@
-# System Stress Test
+# SysPulse
 
 A comprehensive C++ system stress testing tool that performs simultaneous CPU and memory stress testing with real-time monitoring and colorized console output.
 
@@ -43,7 +43,7 @@ This project uses [just](https://github.com/casey/just) as a command runner.
 
    ```bash
    git clone <repository-url>
-   cd SystemStressTest
+   cd SysPulse
    ```
 
 2. **Build and run the console app**:
