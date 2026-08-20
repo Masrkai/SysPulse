@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./assets/SysPulse_icon.svg" alt="SysPulse Logo" width="128">
+</p>
+
 # SysPulse
 
 A comprehensive C++ system stress testing tool that performs simultaneous CPU and memory stress testing with real-time monitoring and colorized console output.

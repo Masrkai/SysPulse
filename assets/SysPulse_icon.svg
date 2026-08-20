@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#18181b" />
+      <stop offset="100%" stop-color="#09090b" />
+    </linearGradient>
+  </defs>
+
+  <!-- Base Plate -->
+  <rect x="32" y="32" width="448" height="448" rx="96" ry="96" fill="url(#bg)" stroke="#27272a" stroke-width="8" />
+
+  <!-- Enterprise System Grid / Core Blocks -->
+  <g fill="none" stroke="#e4e4e7" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer Chip Frame -->
+    <rect x="144" y="144" width="224" height="224" rx="24" ry="24" stroke="#71717a" stroke-width="16" />
+    
+    <!-- Inner Core Metrics Bars / Nodes -->
+    <line x1="200" y1="200" x2="312" y2="200" stroke-width="20" />
+    <line x1="200" y1="256" x2="280" y2="256" stroke-width="20" />
+    <line x1="200" y1="312" x2="240" y2="312" stroke-width="20" />
+
+    <!-- Pin Connections (Enterprise Chip Pins) -->
+    <line x1="224" y1="96" x2="224" y2="144" stroke-width="16" />
+    <line x1="288" y1="96" x2="288" y2="144" stroke-width="16" />
+    
+    <line x1="224" y1="368" x2="224" y2="416" stroke-width="16" />
+    <line x1="288" y1="368" x2="288" y2="416" stroke-width="16" />
+
+    <line x1="96" y1="224" x2="144" y2="224" stroke-width="16" />
+    <line x1="96" y1="288" x2="144" y2="288" stroke-width="16" />
+
+    <line x1="368" y1="224" x2="416" y2="224" stroke-width="16" />
+    <line x1="368" y1="288" x2="416" y2="288" stroke-width="16" />
+  </g>
+</svg>
