@@ -15,6 +15,7 @@ A comprehensive C++ system stress testing tool that performs simultaneous CPU an
 ## Demo
 
 The tool displays real-time progress with:
+
 - Time progress bar showing test duration
 - Memory allocation progress with current usage
 - Hash operations counter
@@ -22,63 +23,54 @@ The tool displays real-time progress with:
 
 ## Requirements
 
-- **C++17 compatible compiler**
-- **CMake 3.10 or higher**
+- **C++17 compatible compiler** (or C++20 for GUI)
+- **just command runner**
+- **curl, tar** (for fetching/building external dependencies if not present in system packages)
 - **Threading support** (pthread on Unix, native threads on Windows)
 
-### Platform-specific requirements:
+### Platform-specific requirements
+
 - **Windows**: Visual Studio 2017+ or MinGW-w64
 - **Linux/macOS**: GCC 7+ or Clang 5+
 
-## Installation
+## Installation & Usage
 
-### Option 1: Using Nix (Recommended)
+This project uses [just](https://github.com/casey/just) as a command runner.
 
-If you have Nix installed, simply run:
-
-```bash
-nix-shell
-```
-
-This will automatically:
-- Set up the build environment
-- Create the build directory
-- Run CMake and compile the project
-- Generate the executable in the `build` directory
-
-### Option 2: Manual Build
+### Using `just`
 
 1. **Clone the repository**:
+
    ```bash
    git clone <repository-url>
    cd SystemStressTest
    ```
 
-2. **Create build directory**:
+2. **Build and run the console app**:
+
    ```bash
-   mkdir build
-   cd build
+   just build
+   just run
    ```
 
-3. **Configure with CMake**:
+3. **Build and run unit tests**:
+
    ```bash
-   cmake ..
+   just test-build
+   just test
    ```
 
-4. **Build the project**:
+4. **Build and run the GUI**:
+
    ```bash
-   make
+   just gui-build
+   just gui
    ```
 
-## Usage
-
-Run the executable from the build directory:
-
-```bash
-./SystemStressTest
-```
+*(Note: `just` automatically checks system packages for `slint-compiler` and `gtest` using `which`. If not found, it automatically fetches and builds them in the `libs/` directory).*
 
 The program will:
+
 1. Display a warning about system stress testing
 2. Prompt for confirmation to continue
 3. Detect available CPU cores
@@ -102,57 +94,64 @@ Key parameters can be modified in `include/MemoryStressTest.hpp` for memory :
 ```
 
 ## Project Structure
-the icons are present because I use [eza](https://github.com/eza-community/eza) project set it up if you want them too
-```bash
-$ eza  --color=always --group-directories-first --long --git --icons=always --links -a --tree --ignore-glob="*.log|*.tmp|.git|profiling|build"
 
- .
-├──  .vscode
-│   └──  settings.json
-├──  flamegraphs
-│   ├── 󰕙 calls_flamegraph.svg
-│   ├── 󰕙 cpu_flamegraph.svg
-│   └── 󰕙 memory_flamegraph.svg
-├──  include
-│   ├──  ConsoleColors.hpp
-│   ├──  ConsoleInitializer.hpp
-│   ├──  CPUStressTest.hpp
-│   ├──  LinkedList.hpp
-│   ├──  MemoryStressTest.hpp
-│   └──  TimeManager.hpp
-├──  Scripts
-│   ├──  build_profiling.sh
-│   ├──  build_release.sh
-│   ├──  kernel_security_bypass.sh
-│   └──  profile.sh
-├──  src
-│   ├──  ConsoleInitializer.cpp
-│   ├──  CPUStressTest.cpp
-│   ├──  main.cpp
-│   ├──  MemoryStressTest.cpp
-│   └──  TimeManager.cpp
-├──  tests
-│   ├──  test_cpustresstest.cpp
-│   ├──  test_linkedlist.cpp
-│   ├──  test_memorystresstest.cpp
-│   └──  test_timemanager.cpp
-├──  .gitattributes
-├──  .gitignore
-├──  CMakeLists.txt
-├──  LICENSE
-├── 󰂺 README.md
-└──  shell.nix
+the icons are present because I use [eza](https://github.com/eza-community/eza) project set it up if you want them too
+
+```bash
+$ eza  --color=always --group-directories-first --links -a --tree --ignore-glob="*.log|*.tmp|.git|profiling|build"
+.
+├── flamegraphs
+│   ├── calls_flamegraph.svg
+│   ├── cpu_flamegraph.svg
+│   └── memory_flamegraph.svg
+├── include
+│   ├── ConsoleColors.hpp
+│   ├── ConsoleInitializer.hpp
+│   ├── CPUStressTest.hpp
+│   ├── LinkedList.hpp
+│   ├── MemoryStressTest.hpp
+│   └── TimeManager.hpp
+├── Scripts
+│   ├── kernel_security_bypass.sh
+│   └── profile.sh
+├── src
+│   ├── ConsoleInitializer.cpp
+│   ├── CPUStressTest.cpp
+│   ├── main.cpp
+│   ├── main_gui.cpp
+│   ├── MemoryStressTest.cpp
+│   └── TimeManager.cpp
+├── tests
+│   ├── test_cpustresstest.cpp
+│   ├── test_linkedlist.cpp
+│   ├── test_memorystresstest.cpp
+│   └── test_timemanager.cpp
+├── ui
+│   ├── colors.slint
+│   ├── main.slint
+│   ├── metric_card.slint
+│   ├── panel.slint
+│   └── thread_bar.slint
+├── .gitattributes
+├── .gitignore
+├── Doxyfile
+├── justfile
+├── LICENSE
+├── README.md
+└── shell.nix
 ```
 
 ## Technical Details
 
 ### CPU Stress Testing
+
 - Uses compute-intensive hash-like operations
 - Spawns one thread per CPU core
 - Performs batched operations for efficiency
 - Uses atomic counters for thread-safe operation tracking
 
 ### Memory Stress Testing
+
 - Allocates memory in 1MB blocks
 - Uses custom linked list for memory management
 - Employs RAII principles with smart pointers
@@ -185,6 +184,7 @@ $ eza  --color=always --group-directories-first --long --git --icons=always --li
 ## Performance Metrics
 
 The tool tracks and displays:
+
 - **Hash operations per second**: Measures CPU performance
 - **Memory allocation rate**: Tracks memory subsystem performance
 - **Real-time progress**: Visual feedback during testing

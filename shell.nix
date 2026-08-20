@@ -21,7 +21,7 @@ pkgs.mkShell {
 
   packages = with pkgs; [
     gcc
-    cmake
+    just
     gnumake
 
     stdenv.cc
@@ -29,7 +29,7 @@ pkgs.mkShell {
 
     # Profiling
     flamegraph
-      kernelPackages.perf # Needed By FlameGraph
+      perf # Needed By FlameGraph
 
     #? Slint GUI (src/main_gui.cpp + ui/*.slint)
     #? Slint's C++ API is backed by its Rust runtime -- CMake's
@@ -54,6 +54,9 @@ pkgs.mkShell {
     libxkbcommon     # keyboard handling, winit needs this alongside wayland
     libGL            # GL context creation for Slint's renderer
     freetype         # font rasterization, pairs with fontconfig above
+    systemdMinimal   # libudev - winit's libinput backend needs it
+    libgbm           # libgbm - mesa buffer management for the GL renderer
+    libinput         # input handling, pairs with libxkbcommon above
 
     #? Ninja is Slint's recommended CMake generator -- faster builds and
     #? correct .slint dependency tracking (pass -GNinja when configuring)
@@ -95,16 +98,25 @@ pkgs.mkShell {
   CMAKE_C_COMPILER = "${pkgs.gcc}/bin/gcc";
   CMAKE_CXX_COMPILER = "${pkgs.gcc}/bin/g++";
 
-  shellHook = ''
-    # Export compiler paths explicitly
-    export CC="${pkgs.gcc}/bin/gcc"
-    export CXX="${pkgs.gcc}/bin/g++"
+  #? Slint's winit backend dlopen()s these at runtime; nixpkgs doesn't put
+  #? shared libs on a standard search path, so export them from the shell.
+  LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+    pkgs.fontconfig
+    pkgs.freetype
+    pkgs.libxkbcommon
+    pkgs.wayland
+    pkgs.libGL
+    pkgs.systemdMinimal
+    pkgs.libgbm
+    pkgs.libinput
+    pkgs.stdenv.cc.cc.lib
+  ];
 
-    ${builtins.readFile ./Scripts/kernel_security_bypass.sh}
-    ${builtins.readFile ./Scripts/build_release.sh}
-    ${builtins.readFile ./Scripts/build_profiling.sh}
+  # shellHook = ''
 
-  '';
+  #   ${builtins.readFile ./Scripts/kernel_security_bypass.sh}
+
+  # '';
 
     # ${builtins.readFile ./Scripts/profile.sh}
 

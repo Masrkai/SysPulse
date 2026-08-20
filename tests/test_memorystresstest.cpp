@@ -232,16 +232,26 @@ TEST_F(MemoryStressTestFixture, ResourceCleanup) {
     EXPECT_GT(allocatedBeforeStop, 0);
 
     memoryTest->stop();
+
+    // Capture right after stop() - only a block that already passed the
+    // `running` check may still land after this point.
+    size_t allocatedAtStop = memoryTest->getMemoryAllocated();
     memoryTest->waitForCompletion();
 
     // After stopping, the test should not be running
     EXPECT_FALSE(memoryTest->isRunning());
 
     // Memory should remain allocated (as it's stored in the linked list)
-    // This is expected behavior - the memory blocks persist until destruction
+    // This is expected behavior - the memory blocks persist until destruction.
+    // A worker that already passed the `running` check before stop() may still
+    // finish one in-flight 1MB block after stop(), so allow at most one block
+    // of growth after the stop() read.
+    constexpr size_t blockSize = 1024 * 1024;
     size_t allocatedAfterStop = memoryTest->getMemoryAllocated();
-    EXPECT_EQ(allocatedAfterStop, allocatedBeforeStop)
+    EXPECT_GE(allocatedAfterStop, allocatedAtStop)
         << "Memory should remain allocated after stop";
+    EXPECT_LE(allocatedAfterStop, allocatedAtStop + blockSize)
+        << "Memory should only grow by at most one in-flight block after stop";
 }
 
 // Test multiple start/stop cycles

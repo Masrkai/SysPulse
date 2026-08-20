@@ -1,0 +1,32 @@
+// thread_bar.slint
+// One row in the CPU thread panel
+
+import { ConsoleColors } from "./colors.slint";
+
+export component ThreadBar inherits Rectangle {
+    in property <int> thread-index;
+    in property <float> load;        // 0.0 .. 1.0
+    height: 16px;
+
+    HorizontalLayout {
+        spacing: 8px;
+        Text {
+            text: "thread " + thread-index;
+            font-size: 11px;
+            color: #999999;
+            width: 56px;
+            vertical-alignment: center;
+        }
+        Rectangle {
+            background: #262626;
+            border-radius: 4px;
+            Rectangle {
+                x: 0; y: 0;
+                height: 100%;
+                width: parent.width * load;
+                background: ConsoleColors.cyan;
+                border-radius: 4px;
+            }
+        }
+    }
+}

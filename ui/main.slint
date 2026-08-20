@@ -1,113 +1,18 @@
-// stress_test_ui.slint
-// UI-only declaration for SST-Systems_Stress_Tester.
-// No logic lives here — every value below is a property or callback
-// meant to be driven/consumed from C++ (main.cpp / SystemStressTestManager).
+// main.slint
+// Main UI declaration for SST-Systems_Stress_Tester.
 
 import { Button, Slider, ProgressIndicator } from "std-widgets.slint";
-
-// Colors mirrored 1:1 from include/ConsoleColors.hpp
-global ConsoleColors {
-    out property <color> cyan: #1D9E75;      // time / elapsed
-    out property <color> magenta: #D4537E;   // banners / titles
-    out property <color> yellow: #EF9F27;    // thread pool events, warnings
-    out property <color> green: #639922;     // memory, good bandwidth
-    out property <color> red: #E24B4A;       // stop / danger, bad_alloc
-    out property <color> blue: #378ADD;      // core count / info
-}
-
-// --- A single metric tile (Elapsed / Cores / Hash ops / Bandwidth) -------
-component MetricCard inherits Rectangle {
-    in property <string> label;
-    in property <string> value;
-    in property <string> unit: "";
-    in property <color> accent: black;
-
-    background: #1a1a1a;
-    border-radius: 8px;
-    // padding: 12px;
-
-    VerticalLayout {
-        padding: 12px;
-        spacing: 4px;
-        Text {
-            text: label;
-            font-size: 12px;
-            color: #999999;
-        }
-        HorizontalLayout {
-            spacing: 4px;
-            alignment: start;
-            Text {
-                text: value;
-                font-size: 22px;
-                font-weight: 500;
-                color: accent;
-            }
-            Text {
-                text: unit;
-                font-size: 12px;
-                color: #666666;
-                vertical-alignment: bottom;
-            }
-        }
-    }
-}
-
-// --- One row in the CPU thread panel --------------------------------------
-component ThreadBar inherits Rectangle {
-    in property <int> thread-index;
-    in property <float> load;        // 0.0 .. 1.0
-    height: 16px;
-
-    HorizontalLayout {
-        spacing: 8px;
-        Text {
-            text: "thread " + thread-index;
-            font-size: 11px;
-            color: #999999;
-            width: 56px;
-            vertical-alignment: center;
-        }
-        Rectangle {
-            background: #262626;
-            border-radius: 4px;
-            Rectangle {
-                x: 0; y: 0;
-                height: 100%;
-                width: parent.width * load;
-                background: ConsoleColors.cyan;
-                border-radius: 4px;
-            }
-        }
-    }
-}
-
-// --- A titled panel wrapper (CPU panel, Memory panel) ---------------------
-component Panel inherits Rectangle {
-    in property <string> title;
-    in property <color> icon-color;
-    background: #1a1a1a;
-    border-radius: 12px;
-
-    VerticalLayout {
-        padding: 16px;
-        spacing: 10px;
-        Text {
-            text: title;
-            font-size: 14px;
-            font-weight: 500;
-            color: icon-color;
-        }
-        @children
-    }
-}
+import { ConsoleColors } from "./colors.slint";
+import { MetricCard } from "./metric_card.slint";
+import { ThreadBar } from "./thread_bar.slint";
+import { Panel } from "./panel.slint";
 
 export component StressTestWindow inherits Window {
     title: "System Stress Tester";
     width: 700px;
     height: 640px;
     background: #101010;
-    icon: @image-url("icon.png");
+
 
     // ---- state driven from C++ --------------------------------------
     in property <bool> is-running: false;

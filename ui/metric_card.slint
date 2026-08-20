@@ -1,0 +1,38 @@
+// metric_card.slint
+// A single metric tile (Elapsed / Cores / Hash ops / Bandwidth)
+
+export component MetricCard inherits Rectangle {
+    in property <string> label;
+    in property <string> value;
+    in property <string> unit: "";
+    in property <color> accent: black;
+
+    background: #1a1a1a;
+    border-radius: 8px;
+
+    VerticalLayout {
+        padding: 12px;
+        spacing: 4px;
+        Text {
+            text: label;
+            font-size: 12px;
+            color: #999999;
+        }
+        HorizontalLayout {
+            spacing: 4px;
+            alignment: start;
+            Text {
+                text: value;
+                font-size: 22px;
+                font-weight: 500;
+                color: accent;
+            }
+            Text {
+                text: unit;
+                font-size: 12px;
+                color: #666666;
+                vertical-alignment: bottom;
+            }
+        }
+    }
+}

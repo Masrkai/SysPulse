@@ -1,7 +1,6 @@
 #pragma once
 
 #include <mutex>
-#include <string>
 #include <vector>
 #include <thread>
 #include <atomic>
@@ -18,35 +17,35 @@ private:
     std::atomic<bool>     running{true};     // Global stop flag for the whole test
 
     int numCores = 0;
-    std::mutex consoleMutex;
 
-    // Guards cpuThreads + threadRunning together, since manageThreadPool()
-    // mutates both and waitForCompletion() iterates cpuThreads.
+    // Guards cpuThreads while getThreadLoads() samples thread load counters;
+    // cpuThreads is only mutated in start() and waitForCompletion().
     std::mutex threadPoolMutex;
     std::vector<std::thread> cpuThreads;
     std::vector<std::atomic<bool>> threadRunning; // per-thread stop flag, sized to numCores
-    std::thread poolManagerThread;
 
-    // Per-thread op counters, sized once in initialize() to numCores and
-    // indexed directly by threadId (threads only ever get added at the
-    // back and removed from the back, so indices stay stable).
-    std::vector<std::atomic<uint64_t>> threadOps;
-    std::vector<uint64_t> lastThreadOps;   // poller-side, for delta calc
+    // Per-thread op counters and CPU-time snapshots, sized once in
+    // initialize() to numCores and indexed directly by threadId.
+    std::vector<std::atomic<uint64_t>> threadOps;   // hash-ops completed (rate fallback)
+    std::vector<std::atomic<uint64_t>> threadCpuNs; // CLOCK_THREAD_CPUTIME_ID snapshots
+    std::vector<uint64_t> lastThreadOps;            // poller-side, for hash-rate fallback
+    std::vector<uint64_t> lastThreadCpuNs;          // poller-side, for CPU-time delta
+    std::vector<float>    lastThreadLoads;          // held between polls (mid-op smoothing)
     int64_t lastThreadPollMs = 0;
 
-    // Latest thread-pool event ("thread N added/removed — ..."), surfaced
-    // to the UI via getLatestEvent(). eventSeq lets a poller detect "is
-    // this a new event" without string comparisons.
-    std::mutex eventMutex;
-    std::string lastEventText;
-    uint64_t eventSeq = 0;
+    // System load derived from /proc/stat sampling (Linux), reset in initialize().
+    uint64_t prevCpuTotal = 0;
+    uint64_t prevCpuIdle  = 0;
+
+    // Hash-rate fallback accumulator (non-Linux), reset in initialize().
+    uint64_t lastOps   = 0;
+    int64_t  lastCheck = 0;
 
     TimeManager& timeManager;
 
     float getCurrentSystemLoad();
+    float estimateLoadFromHashRate();
     void  cpuHashStressTest(int threadId);
-    void  manageThreadPool();
-    void  pushEvent(const std::string& text);
 
 public:
     CPUStressTest() : timeManager(TimeManager::getInstance()) {}
@@ -59,11 +58,11 @@ public:
 
     uint64_t getHashOperations() const { return hashOps.load(std::memory_order_relaxed); }
     int getCoreCount() const { return numCores; }
+    int getActiveThreadCount() const { return static_cast<int>(cpuThreads.size()); }
     bool isRunning() const { return running.load(); }
 
     // GUI polling interface
-    std::vector<float> getThreadLoads();                          // one entry per *active* thread, 0..1
-    bool getLatestEvent(std::string& outText, uint64_t& lastSeenSeq); // true if a new event since lastSeenSeq
+    std::vector<float> getThreadLoads(); // one entry per *active* thread, 0..1
 
     CPUStressTest(const CPUStressTest&) = delete;
     CPUStressTest& operator=(const CPUStressTest&) = delete;

@@ -1,0 +1,21 @@
+// panel.slint
+// A titled panel wrapper (CPU panel, Memory panel)
+
+export component Panel inherits Rectangle {
+    in property <string> title;
+    in property <color> icon-color;
+    background: #1a1a1a;
+    border-radius: 12px;
+
+    VerticalLayout {
+        padding: 16px;
+        spacing: 10px;
+        Text {
+            text: title;
+            font-size: 14px;
+            font-weight: 500;
+            color: icon-color;
+        }
+        @children
+    }
+}
