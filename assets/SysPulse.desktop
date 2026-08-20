@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Name=SysPulse
+GenericName=System Stress Test & Monitor
+Comment=High-performance C++ CPU & Memory stress testing suite with real-time telemetry
+Exec=syspulse_gui
+Icon=syspulse_icon.svg
+Terminal=false
+Categories=System;Monitor;Benchmark;Utility;
+Keywords=Stress;Benchmark;CPU;Memory;Performance;Monitor;
+StartupNotify=true
+Actions=ConsoleMode;
+
+[Desktop Action ConsoleMode]
+Name=Run Console Stress Test
+Exec=SysPulse
