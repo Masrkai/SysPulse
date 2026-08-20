@@ -112,12 +112,7 @@ pkgs.mkShell {
     pkgs.stdenv.cc.cc.lib
   ];
 
-  # shellHook = ''
-
-  #   ${builtins.readFile ./Scripts/kernel_security_bypass.sh}
-
-  # '';
-
-    # ${builtins.readFile ./Scripts/profile.sh}
-
+  shellHook = ''
+    ${builtins.readFile ./Scripts/kernel_security_bypass.sh}
+  '';
 }
