@@ -135,8 +135,8 @@ void CPUStressTest::cpuFpuStressTest(int threadId, double maxElapsedSeconds) {
 }
 
 void CPUStressTest::cpuCacheLatencyTest(int threadId, double maxElapsedSeconds) {
-    // Pointer chasing benchmark on a 4MB buffer to measure L3/L2/L1 cache latency
-    constexpr size_t BUFFER_SIZE = 4 * 1024 * 1024; // 4 MB
+    // Pointer chasing benchmark on a 64MB buffer to measure main memory (RAM) latency (bypassing L3 cache)
+    constexpr size_t BUFFER_SIZE = 64 * 1024 * 1024; // 64 MB
     constexpr size_t NODE_SIZE = 64; // cache line
     constexpr size_t NUM_NODES = BUFFER_SIZE / NODE_SIZE;
 
@@ -302,8 +302,9 @@ void CPUStressTest::initialize() {
     threadCpuNs = std::vector<std::atomic<uint64_t>>(numCores);
     for (auto& c : threadCpuNs) c.store(0, std::memory_order_relaxed);
 
+    lastThreadCpuNs.assign(numCores, 0ULL);
     lastThreadLoads.assign(numCores, 0.0f);
-    lastThreadPollMs = 0;
+    lastThreadPollMs = timeManager.getElapsedMilliseconds();
 }
 
 void CPUStressTest::start() {
@@ -389,13 +390,22 @@ std::vector<float> CPUStressTest::getThreadLoads() {
     lastThreadPollMs = now;
 
     std::vector<float> loads(activeCount, 0.0f);
-    if (duration <= 0) return loads;
+    if (duration <= 0 || activeCount == 0) return loads;
 
-    for (size_t i = 0; i < activeCount; ++i) {
+    for (size_t i = 0; i < activeCount && i < threadCpuNs.size() && i < lastThreadCpuNs.size(); ++i) {
 #ifdef __linux__
-        [[maybe_unused]] uint64_t current = threadCpuNs[i].load(std::memory_order_relaxed);
-        // simplified load estimation
-        loads[i] = 0.85f; // active worker load estimate
+        uint64_t current = threadCpuNs[i].load(std::memory_order_relaxed);
+        uint64_t previous = lastThreadCpuNs[i];
+        lastThreadCpuNs[i] = current;
+        uint64_t deltaCpu = (current > previous) ? (current - previous) : 0;
+        uint64_t deltaWallNs = static_cast<uint64_t>(duration) * 1000000ULL; // ms to ns
+        if (deltaWallNs > 0) {
+            // In multi-core test mode, a single core is fully utilized by the worker thread
+            float load = static_cast<float>(deltaCpu) / static_cast<float>(deltaWallNs);
+            loads[i] = std::clamp(load, 0.0f, 1.0f);
+        } else {
+            loads[i] = 0.0f;
+        }
 #else
         loads[i] = 0.85f;
 #endif

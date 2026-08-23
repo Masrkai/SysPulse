@@ -26,6 +26,7 @@ private:
     std::atomic<bool>     running{true};        // Flag to indicate if the test is running
     std::atomic<size_t>   memoryAllocated{0};   // Memory allocated in bytes
     std::atomic<double>   memoryBandwidth{0.0}; // Memory bandwidth in MB/s
+    std::atomic<bool>     allocationFailed{false}; // OOM / allocation failure flag
 
     std::mutex consoleMutex;
 
@@ -62,6 +63,7 @@ public:
     size_t getTargetMemory() const { return TARGET_MEMORY * MULTIPLIER; }
     size_t getBandwidthTestSize() const { return BANDWIDTH_TEST_SIZE; }
     bool isRunning() const { return running.load(); }
+    bool hasAllocationFailed() const { return allocationFailed.load(std::memory_order_relaxed); }
 
     // Disable copy constructor and assignment
     MemoryStressTest(const MemoryStressTest&) = delete;

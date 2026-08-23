@@ -16,48 +16,42 @@ private:
     std::atomic<bool> testEnded{false};
     mutable std::mutex timeMutex;
 
-    static TimeManager* instance;
-    static std::mutex instanceMutex;
-
     // Private constructor for singleton pattern
     TimeManager() = default;
 
 public:
-    // Singleton pattern implementation
+    // Meyers' Singleton implementation (thread-safe in C++11 and later)
     static TimeManager& getInstance() {
-        std::lock_guard<std::mutex> lock(instanceMutex);
-        if (!instance) {
-            instance = new TimeManager();
-        }
-        return *instance;
+        static TimeManager instance;
+        return instance;
     }
 
     // Start the global timer
     void startTimer() {
         std::lock_guard<std::mutex> lock(timeMutex);
-        if (!testStarted.load()) {
+        if (!testStarted.load(std::memory_order_acquire)) {
             startTime = std::chrono::steady_clock::now();
-            testStarted.store(true);
+            testStarted.store(true, std::memory_order_release);
         }
     }
 
     // End the global timer
     void endTimer() {
         std::lock_guard<std::mutex> lock(timeMutex);
-        if (testStarted.load() && !testEnded.load()) {
+        if (testStarted.load(std::memory_order_acquire) && !testEnded.load(std::memory_order_acquire)) {
             endTime = std::chrono::steady_clock::now();
-            testEnded.store(true);
+            testEnded.store(true, std::memory_order_release);
         }
     }
 
     // Get elapsed time in seconds (double precision)
     double getElapsedSeconds() const {
         std::lock_guard<std::mutex> lock(timeMutex);
-        if (!testStarted.load()) {
+        if (!testStarted.load(std::memory_order_acquire)) {
             return 0.0;
         }
 
-        auto currentTime = testEnded.load() ? endTime : std::chrono::steady_clock::now();
+        auto currentTime = testEnded.load(std::memory_order_acquire) ? endTime : std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - startTime);
         return duration.count() / 1000000.0; // Convert microseconds to seconds
     }
@@ -65,11 +59,11 @@ public:
     // Get elapsed time in milliseconds
     int64_t getElapsedMilliseconds() const {
         std::lock_guard<std::mutex> lock(timeMutex);
-        if (!testStarted.load()) {
+        if (!testStarted.load(std::memory_order_acquire)) {
             return 0;
         }
 
-        auto currentTime = testEnded.load() ? endTime : std::chrono::steady_clock::now();
+        auto currentTime = testEnded.load(std::memory_order_acquire) ? endTime : std::chrono::steady_clock::now();
         return std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
     }
 
@@ -85,19 +79,19 @@ public:
 
     // Check if test has started
     bool hasStarted() const {
-        return testStarted.load();
+        return testStarted.load(std::memory_order_acquire);
     }
 
     // Check if test has ended
     bool hasEnded() const {
-        return testEnded.load();
+        return testEnded.load(std::memory_order_acquire);
     }
 
     // Reset the timer (for testing purposes)
     void reset() {
         std::lock_guard<std::mutex> lock(timeMutex);
-        testStarted.store(false);
-        testEnded.store(false);
+        testStarted.store(false, std::memory_order_release);
+        testEnded.store(false, std::memory_order_release);
     }
 
     // Get precise start time
@@ -112,11 +106,9 @@ public:
         return endTime;
     }
 
-    // Cleanup function
+    // Compatibility cleanup function (resets state for existing test suites)
     static void cleanup() {
-        std::lock_guard<std::mutex> lock(instanceMutex);
-        delete instance;
-        instance = nullptr;
+        getInstance().reset();
     }
 
     // Destructor

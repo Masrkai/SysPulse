@@ -37,6 +37,7 @@ private:
     // Per-thread counters and CPU-time snapshots
     std::vector<std::atomic<uint64_t>> threadOps;
     std::vector<std::atomic<uint64_t>> threadCpuNs;
+    std::vector<uint64_t> lastThreadCpuNs;
     std::vector<float>    lastThreadLoads;
     int64_t lastThreadPollMs = 0;
 

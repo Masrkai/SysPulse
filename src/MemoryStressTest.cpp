@@ -148,6 +148,7 @@ void MemoryStressTest::memoryStressTest() {
             memoryBlocks.Insert_At_End(std::move(block));
         }
     } catch (const std::bad_alloc &e) {
+        allocationFailed.store(true, std::memory_order_relaxed);
         // Handle memory allocation failure
         std::lock_guard<std::mutex> lock(consoleMutex); // Ensure thread-safe console output
         std::cout << "\n"
@@ -163,6 +164,7 @@ void MemoryStressTest::initialize() {
     memoryBandwidth.store(0.0);
     running.store(true);
     bandwidthTestRunning.store(false);
+    allocationFailed.store(false);
 }
 
 void MemoryStressTest::start() {
