@@ -7,3 +7,4 @@ libs
 build
 profiling
 .cache/
+.plan*

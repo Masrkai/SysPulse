@@ -166,6 +166,21 @@ public:
                   << TEST_DURATION << " seconds."
                   << ConsoleColors::RESET << std::endl;
 
+        // Prompt mode
+        std::cout << "Select mode:\n"
+                  << "  1. Single-Core Test\n"
+                  << "  2. Multi-Core Test (All Cores)\n"
+                  << "Enter choice [1/2, default 2]: ";
+        std::string modeChoice;
+        std::getline(std::cin, modeChoice);
+        if (modeChoice == "1") {
+            cpuTest.setTestMode(CPUStressTest::TestMode::SingleCore);
+            std::cout << "Selected: Single-Core Mode\n";
+        } else {
+            cpuTest.setTestMode(CPUStressTest::TestMode::MultiCore);
+            std::cout << "Selected: Multi-Core Mode\n";
+        }
+
         // Prompt the user to continue
         std::cout << "Press Enter to continue...";
         std::cin.get();
@@ -209,29 +224,31 @@ public:
         std::cout << std::endl;
 
         std::cout << "\n\n" << ConsoleColors::MAGENTA
-                  << "=== Test Results ==="
+                  << "=== Comprehensive Benchmark Results ==="
                   << ConsoleColors::RESET << std::endl;
 
-        std::cout << ConsoleColors::CYAN
-                  << "Total hashing operations: " << cpuTest.getHashOperations()
-                  << " ops" << ConsoleColors::RESET << std::endl;
+        BenchmarkResults res = cpuTest.getBenchmarkResults();
+        ScoreBreakdown score = cpuTest.getScoreBreakdown();
 
-        std::cout << ConsoleColors::CYAN
-                  << "Total execution time: " << std::fixed << std::setprecision(3)
-                  << timeManager.getElapsedSeconds() << " seconds"
+        std::cout << ConsoleColors::GREEN << std::fixed << std::setprecision(1)
+                  << "Overall CPU Score: " << score.overallScore << " / 10000"
                   << ConsoleColors::RESET << std::endl;
 
-        std::cout << ConsoleColors::CYAN
-                  << "Maximum memory allocated: " << ((memoryTest.getMemoryAllocated() + memoryTest.getBandwidthTestSize()) / (1024 * 1024))
-                  << "MB" << ConsoleColors::RESET << std::endl;
+        std::cout << "----------------------------------------\n";
+        std::cout << "Sub-Scores & Metrics:\n"
+                  << "  - ALU Score:     " << std::fixed << std::setprecision(0) << score.aluScore << ConsoleColors::RESET << " (ALU: " << std::fixed << std::setprecision(1) << res.aluOpsPerSec / 1e6 << " M ops/s)\n"
+                  << "  - FPU/SIMD Score:" << std::fixed << std::setprecision(0) << score.fpuScore << " (FPU: " << std::fixed << std::setprecision(1) << res.fpuOpsPerSec / 1e6 << " M ops/s)\n"
+                  << "  - Cache Score:   " << std::fixed << std::setprecision(0) << score.cacheScore << " (Latency: " << std::fixed << std::setprecision(2) << res.cacheLatencyNs << " ns)\n"
+                  << "  - Crypto Score:  " << std::fixed << std::setprecision(0) << score.cryptoScore << " (Crypto: " << std::fixed << std::setprecision(1) << res.cryptoMbPerSec << " MB/s)\n"
+                  << "  - Compression:   " << std::fixed << std::setprecision(0) << score.compressionScore << " (Comp: " << std::fixed << std::setprecision(1) << res.compressionMbPerSec << " MB/s)\n";
 
         std::cout << ConsoleColors::CYAN
+                  << "\nTotal execution time: " << std::fixed << std::setprecision(3)
+                  << timeManager.getElapsedSeconds() << " seconds\n"
                   << "Memory bandwidth: " << std::fixed << std::setprecision(2)
-                  << memoryTest.getMemoryBandwidth() << " MB/s"
-                  << ConsoleColors::RESET << std::endl;
-
-        std::cout << ConsoleColors::CYAN
-                  << "CPU cores utilized: " << cpuTest.getCoreCount()
+                  << memoryTest.getMemoryBandwidth() << " MB/s\n"
+                  << "Test Mode: " << (cpuTest.getTestMode() == CPUStressTest::TestMode::SingleCore ? "Single-Core" : "Multi-Core")
+                  << " (" << (cpuTest.getTestMode() == CPUStressTest::TestMode::SingleCore ? 1 : cpuTest.getCoreCount()) << " threads)\n"
                   << ConsoleColors::RESET << std::endl;
 
         // Cleanup

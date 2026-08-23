@@ -341,3 +341,47 @@ TEST_F(CPUStressTestTest, ThreadLoadsWithinRange) {
     cpuTest.stop();
     cpuTest.waitForCompletion();
 }
+
+TEST_F(CPUStressTestTest, ScoreCalculatorTest) {
+    BenchmarkResults res;
+    res.aluOpsPerSec = 10'000'000.0;
+    res.fpuOpsPerSec = 5'000'000.0;
+    res.cacheLatencyNs = 8.0;
+    res.cryptoMbPerSec = 500.0;
+    res.compressionMbPerSec = 300.0;
+
+    ScoreBreakdown sb = ScoreCalculator::calculateScore(res, false, 8);
+    EXPECT_GT(sb.overallScore, 0.0);
+    EXPECT_LE(sb.overallScore, 10000.0);
+    EXPECT_GT(sb.aluScore, 0.0);
+    EXPECT_GT(sb.fpuScore, 0.0);
+}
+
+TEST_F(CPUStressTestTest, SingleCoreModeTest) {
+    CPUStressTest cpuTest;
+    cpuTest.initialize();
+    cpuTest.setTestMode(CPUStressTest::TestMode::SingleCore);
+
+    EXPECT_EQ(cpuTest.getTestMode(), CPUStressTest::TestMode::SingleCore);
+
+    TimeManager& tm = TimeManager::getInstance();
+    tm.startTimer();
+    cpuTest.start();
+
+    // Allow enough time to cycle through all subtest time slices
+    std::this_thread::sleep_for(std::chrono::milliseconds(1200));
+
+    EXPECT_EQ(1, cpuTest.getActiveThreadCount());
+
+    cpuTest.stop();
+    cpuTest.waitForCompletion();
+
+    // Verify all subtests ran and recorded non-zero metrics in Single-Core mode
+    EXPECT_GT(cpuTest.getAluOps(), 0);
+    EXPECT_GT(cpuTest.getFpuOps(), 0);
+    EXPECT_GT(cpuTest.getCryptoMbPerSec(), 0.0);
+    EXPECT_GT(cpuTest.getCompressionMbPerSec(), 0.0);
+
+    ScoreBreakdown sb = cpuTest.getScoreBreakdown();
+    EXPECT_GT(sb.overallScore, 0.0);
+}

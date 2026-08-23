@@ -56,8 +56,8 @@ test-build:
 
     gtest_dir="{{external_libs_dir}}/googletest-{{gtest_version}}"
 
-    # 1. Check if gtest is available in system packages using which
-    if which gtest >/dev/null 2>&1 || which gtest-config >/dev/null 2>&1 || pkg-config --exists gtest >/dev/null 2>&1; then
+    # 1. Check if gtest is available in system packages with working headers
+    if pkg-config --exists gtest >/dev/null 2>&1 && {{cxx}} {{base_flags}} -x c++ - -o /dev/null -lgtest -lgtest_main -lpthread <<<'#include <gtest/gtest.h>\nint main() {}' >/dev/null 2>&1; then
         echo "Found system gtest package."
         {{cxx}} {{base_flags}} {{lib_srcs}} {{test_srcs}} -o {{build_dir}}/SysPulse_tests -lgtest -lgtest_main -lpthread
     else
