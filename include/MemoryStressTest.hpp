@@ -14,7 +14,7 @@ private:
     std::vector<std::unique_ptr<std::vector<int>>> memoryBlocks;
 
     static constexpr int    MULTIPLIER = 2;                     // Memory multiplier for stress test (resulting in a 2 GB Max Allocation)
-    static constexpr int    TEST_DURATION = 30;                 // seconds
+    int                     testDurationSeconds = 30;           // seconds
     static constexpr size_t TARGET_MEMORY = 1024 * 1024 * 1024; // 1 GB
 
     // Memory bandwidth measurement constants
@@ -54,6 +54,9 @@ public:
     void start();
     void stop();
     void waitForCompletion();
+
+    void setTestDuration(int seconds) { testDurationSeconds = seconds; }
+    int getTestDuration() const { return testDurationSeconds; }
 
     // Memory bandwidth measurement methods
     void measureMemoryBandwidth();

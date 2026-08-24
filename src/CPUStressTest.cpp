@@ -6,6 +6,9 @@
 #include <ctime>
 #include <cmath>
 #include <random>
+#ifdef __linux__
+#include <unistd.h>
+#endif
 
 namespace {
 
@@ -87,7 +90,7 @@ void CPUStressTest::cpuAluStressTest(int threadId, double maxElapsedSeconds) {
     uint64_t localOps = 0;
     while (running.load(std::memory_order_relaxed) &&
            threadRunning[threadId].load(std::memory_order_relaxed) &&
-           timeManager.shouldContinue(TEST_DURATION) &&
+           timeManager.shouldContinue(testDurationSeconds) &&
            timeManager.getElapsedSeconds() < maxElapsedSeconds) {
         for (int i = 0; i < BATCH_SIZE; ++i) {
             volatile uint64_t base = threadId * 12345 + i * 6789;
@@ -110,7 +113,7 @@ void CPUStressTest::cpuFpuStressTest(int threadId, double maxElapsedSeconds) {
 
     while (running.load(std::memory_order_relaxed) &&
            threadRunning[threadId].load(std::memory_order_relaxed) &&
-           timeManager.shouldContinue(TEST_DURATION) &&
+           timeManager.shouldContinue(testDurationSeconds) &&
            timeManager.getElapsedSeconds() < maxElapsedSeconds) {
         for (int i = 0; i < BATCH_SIZE; ++i) {
             volatile double mat[8][8];
@@ -165,7 +168,7 @@ void CPUStressTest::cpuCacheLatencyTest(int threadId, double maxElapsedSeconds) 
 
     while (running.load(std::memory_order_relaxed) &&
            threadRunning[threadId].load(std::memory_order_relaxed) &&
-           timeManager.shouldContinue(TEST_DURATION) &&
+           timeManager.shouldContinue(testDurationSeconds) &&
            timeManager.getElapsedSeconds() < maxElapsedSeconds) {
         for (int step = 0; step < 10000; ++step) {
             current = current->next;
@@ -195,7 +198,7 @@ void CPUStressTest::cpuCryptoStressTest(int threadId, double maxElapsedSeconds) 
     uint64_t bytesProcessed = 0;
     while (running.load(std::memory_order_relaxed) &&
            threadRunning[threadId].load(std::memory_order_relaxed) &&
-           timeManager.shouldContinue(TEST_DURATION) &&
+           timeManager.shouldContinue(testDurationSeconds) &&
            timeManager.getElapsedSeconds() < maxElapsedSeconds) {
         for (int i = 0; i < 1000; ++i) {
             block[0] ^= static_cast<uint8_t>(i);
@@ -217,7 +220,7 @@ void CPUStressTest::cpuCompressionStressTest(int threadId, double maxElapsedSeco
     uint64_t bytesProcessed = 0;
     while (running.load(std::memory_order_relaxed) &&
            threadRunning[threadId].load(std::memory_order_relaxed) &&
-           timeManager.shouldContinue(TEST_DURATION) &&
+           timeManager.shouldContinue(testDurationSeconds) &&
            timeManager.getElapsedSeconds() < maxElapsedSeconds) {
         for (int iter = 0; iter < 100; ++iter) {
             // Compress mock
@@ -240,27 +243,27 @@ void CPUStressTest::cpuCompressionStressTest(int threadId, double maxElapsedSeco
 void CPUStressTest::runCombinedWorkload(int threadId) {
     if (testMode == TestMode::SingleCore) {
         // Cycle through all 5 subtests in time slices (0.2 seconds per slice)
-        // repeatedly until TEST_DURATION is reached.
+        // repeatedly until testDurationSeconds is reached.
         constexpr double sliceSeconds = 0.2;
         while (running.load(std::memory_order_relaxed) &&
                threadRunning[threadId].load(std::memory_order_relaxed) &&
-               timeManager.shouldContinue(TEST_DURATION)) {
+               timeManager.shouldContinue(testDurationSeconds)) {
             
             double t1 = timeManager.getElapsedSeconds() + sliceSeconds;
             cpuAluStressTest(threadId, t1);
-            if (!running.load() || !timeManager.shouldContinue(TEST_DURATION)) break;
+            if (!running.load() || !timeManager.shouldContinue(testDurationSeconds)) break;
 
             double t2 = timeManager.getElapsedSeconds() + sliceSeconds;
             cpuFpuStressTest(threadId, t2);
-            if (!running.load() || !timeManager.shouldContinue(TEST_DURATION)) break;
+            if (!running.load() || !timeManager.shouldContinue(testDurationSeconds)) break;
 
             double t3 = timeManager.getElapsedSeconds() + sliceSeconds;
             cpuCacheLatencyTest(threadId, t3);
-            if (!running.load() || !timeManager.shouldContinue(TEST_DURATION)) break;
+            if (!running.load() || !timeManager.shouldContinue(testDurationSeconds)) break;
 
             double t4 = timeManager.getElapsedSeconds() + sliceSeconds;
             cpuCryptoStressTest(threadId, t4);
-            if (!running.load() || !timeManager.shouldContinue(TEST_DURATION)) break;
+            if (!running.load() || !timeManager.shouldContinue(testDurationSeconds)) break;
 
             double t5 = timeManager.getElapsedSeconds() + sliceSeconds;
             cpuCompressionStressTest(threadId, t5);
@@ -269,21 +272,31 @@ void CPUStressTest::runCombinedWorkload(int threadId) {
         // Multi-core mode: distribute across threads via threadId % 5
         int workloadType = threadId % 5;
         if (workloadType == 0) {
-            cpuAluStressTest(threadId, TEST_DURATION);
+            cpuAluStressTest(threadId, testDurationSeconds);
         } else if (workloadType == 1) {
-            cpuFpuStressTest(threadId, TEST_DURATION);
+            cpuFpuStressTest(threadId, testDurationSeconds);
         } else if (workloadType == 2) {
-            cpuCacheLatencyTest(threadId, TEST_DURATION);
+            cpuCacheLatencyTest(threadId, testDurationSeconds);
         } else if (workloadType == 3) {
-            cpuCryptoStressTest(threadId, TEST_DURATION);
+            cpuCryptoStressTest(threadId, testDurationSeconds);
         } else {
-            cpuCompressionStressTest(threadId, TEST_DURATION);
+            cpuCompressionStressTest(threadId, testDurationSeconds);
         }
     }
 }
 
 void CPUStressTest::initialize() {
-    numCores = std::thread::hardware_concurrency();
+#ifdef __linux__
+    long onlineCores = sysconf(_SC_NPROCESSORS_ONLN);
+    if (onlineCores > 0) {
+        numCores = static_cast<int>(onlineCores);
+    } else {
+        numCores = static_cast<int>(std::thread::hardware_concurrency());
+    }
+#else
+    numCores = static_cast<int>(std::thread::hardware_concurrency());
+#endif
+    if (numCores <= 0) numCores = 1;
     assert(numCores > 0 && "Failed to detect CPU cores");
 
     aluOps.store(0);

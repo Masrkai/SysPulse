@@ -30,6 +30,8 @@ public:
 
     void setTestDuration(int seconds) {
         testDurationSeconds = seconds;
+        cpuTest.setTestDuration(seconds);
+        memoryTest.setTestDuration(seconds);
     }
 
     int getTestDuration() const {

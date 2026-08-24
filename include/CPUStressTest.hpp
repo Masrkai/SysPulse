@@ -29,6 +29,7 @@ private:
 
     int numCores = 0;
     TestMode testMode = TestMode::MultiCore;
+    int testDurationSeconds = 30;
 
     std::mutex threadPoolMutex;
     std::vector<std::thread> cpuThreads;
@@ -61,6 +62,9 @@ public:
 
     void setTestMode(TestMode mode) { testMode = mode; }
     TestMode getTestMode() const { return testMode; }
+
+    void setTestDuration(int seconds) { testDurationSeconds = seconds; }
+    int getTestDuration() const { return testDurationSeconds; }
 
     uint64_t getHashOperations() const {
         return aluOps.load(std::memory_order_relaxed) +

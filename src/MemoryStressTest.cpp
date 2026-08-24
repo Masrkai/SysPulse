@@ -114,7 +114,7 @@ void MemoryStressTest::continuousBandwidthTest() {
     }
 
     // Continue measuring periodically during the test
-    while (running && timeManager.shouldContinue(TEST_DURATION) && bandwidthTestRunning) {
+    while (running && timeManager.shouldContinue(testDurationSeconds) && bandwidthTestRunning) {
         std::this_thread::sleep_for(std::chrono::seconds(2));
         measureMemoryBandwidth();
     }
@@ -126,7 +126,7 @@ void MemoryStressTest::continuousBandwidthTest() {
 void MemoryStressTest::memoryStressTest() {
     try {
         // Loop to allocate memory until the target threshold is reached or the test is stopped
-        while (running && memoryAllocated < (MULTIPLIER * TARGET_MEMORY) - BANDWIDTH_TEST_SIZE && timeManager.shouldContinue(TEST_DURATION)) {
+        while (running && memoryAllocated < (MULTIPLIER * TARGET_MEMORY) - BANDWIDTH_TEST_SIZE && timeManager.shouldContinue(testDurationSeconds)) {
             static constexpr size_t blockSize = 1024 * 1024; // Block size of 1 MB
 
             // Create a unique pointer to a dynamically allocated vector of integers.
