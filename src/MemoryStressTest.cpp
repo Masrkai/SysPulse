@@ -108,8 +108,10 @@ void MemoryStressTest::measureMemoryBandwidth() {
 void MemoryStressTest::continuousBandwidthTest() {
     bandwidthTestRunning = true;
 
-    // Perform initial measurement
-    measureMemoryBandwidth();
+    // Perform initial measurement only if not already measured
+    if (memoryBandwidth.load() == 0.0) {
+        measureMemoryBandwidth();
+    }
 
     // Continue measuring periodically during the test
     while (running && timeManager.shouldContinue(TEST_DURATION) && bandwidthTestRunning) {

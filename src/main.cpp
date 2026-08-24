@@ -184,7 +184,7 @@ public:
 
         std::cout << std::endl;
         std::cout << "\n\n" << ConsoleColors::MAGENTA
-                  << "=== Comprehensive Benchmark Results ==="
+                  << "=== Benchmark Results ==="
                   << ConsoleColors::RESET << std::endl;
 
         BenchmarkResults res = engine.getBenchmarkResults();

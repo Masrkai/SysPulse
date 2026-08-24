@@ -40,7 +40,6 @@ private:
     void memoryStressTest();
 
     // Memory bandwidth measurement methods
-    void measureMemoryBandwidth();
     double performSequentialRead(uint8_t* buffer, size_t size);
     double performSequentialWrite(uint8_t* buffer, size_t size);
     double performRandomAccess(uint8_t* buffer, size_t size);
@@ -55,6 +54,9 @@ public:
     void start();
     void stop();
     void waitForCompletion();
+
+    // Memory bandwidth measurement methods
+    void measureMemoryBandwidth();
 
     // Getters for monitoring
     size_t getMemoryAllocated() const { return memoryAllocated.load(std::memory_order_relaxed); }

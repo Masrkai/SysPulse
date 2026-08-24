@@ -192,6 +192,7 @@ TEST_F(MemoryStressTestFixture, MemoryAllocationLimits) {
 // Test time-based termination
 TEST_F(MemoryStressTestFixture, TimeBasedTermination) {
     memoryTest->initialize();
+    memoryTest->measureMemoryBandwidth();
 
     // Start timer but don't advance it - simulate very short duration
     timeManager.startTimer();

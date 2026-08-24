@@ -43,6 +43,8 @@ public:
 
     void start() {
         if (isRunning) return;
+        memoryTest.measureMemoryBandwidth();
+        timeManager.reset();
         timeManager.startTimer();
         thermalMonitor.start();
         cpuTest.start();
@@ -67,9 +69,14 @@ public:
 
     bool shouldContinue() const {
         if (thermalMonitor.isOverheated()) {
+            timeManager.endTimer();
             return false;
         }
-        return timeManager.shouldContinue(testDurationSeconds);
+        bool cont = timeManager.shouldContinue(testDurationSeconds);
+        if (!cont && !timeManager.hasEnded()) {
+            timeManager.endTimer();
+        }
+        return cont;
     }
 
     double getElapsedSeconds() const {
