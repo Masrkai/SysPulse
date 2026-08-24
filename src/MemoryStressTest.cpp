@@ -144,8 +144,8 @@ void MemoryStressTest::memoryStressTest() {
             // Update the total allocated memory counter
             memoryAllocated += blockSize;
 
-            // Store the allocated block in the linked list to maintain ownership and prevent deallocation
-            memoryBlocks.Insert_At_End(std::move(block));
+            // Store the allocated block in the vector to maintain ownership and prevent deallocation
+            memoryBlocks.push_back(std::move(block));
         }
     } catch (const std::bad_alloc &e) {
         allocationFailed.store(true, std::memory_order_relaxed);

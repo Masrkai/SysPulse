@@ -366,12 +366,12 @@ BenchmarkResults CPUStressTest::getBenchmarkResults() const {
     } else {
         r.aluOpsPerSec = static_cast<double>(aluOps.load(std::memory_order_relaxed)) / elapsed;
         r.fpuOpsPerSec = static_cast<double>(fpuOps.load(std::memory_order_relaxed)) / elapsed;
-        r.cryptoMbPerSec = getCryptoMbPerSec();
-        r.compressionMbPerSec = getCompressionMbPerSec();
+        r.cryptoMbPerSec = getCryptoMbPerSec() / (numCores > 0 ? numCores : 1);
+        r.compressionMbPerSec = getCompressionMbPerSec() / (numCores > 0 ? numCores : 1);
     }
 
     r.cacheLatencyNs = cacheLatencyNs.load(std::memory_order_relaxed);
-    if (r.cacheLatencyNs <= 0.0) r.cacheLatencyNs = 5.0;
+    if (r.cacheLatencyNs < 1.0) r.cacheLatencyNs = 2.5;
     return r;
 }
 

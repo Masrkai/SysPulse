@@ -17,7 +17,7 @@ external_libs_dir := "libs"
 # Source files
 main_srcs := "src/main.cpp src/ConsoleInitializer.cpp src/TimeManager.cpp src/CPUStressTest.cpp src/MemoryStressTest.cpp"
 lib_srcs := "src/ConsoleInitializer.cpp src/TimeManager.cpp src/CPUStressTest.cpp src/MemoryStressTest.cpp"
-test_srcs := "tests/test_cpustresstest.cpp tests/test_linkedlist.cpp tests/test_memorystresstest.cpp"
+test_srcs := "tests/test_cpustresstest.cpp tests/test_memorystresstest.cpp"
 
 
 # --- Slint (fetched at gui build time if not present in external_libs_dir ) ---

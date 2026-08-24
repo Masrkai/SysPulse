@@ -2,19 +2,18 @@
 
 #include <chrono>
 #include <atomic>
-#include <mutex>
 
 /*
  * Global time management class for precise timing control
  * Provides centralized time tracking for the entire stress test duration
+ * Lock-free implementation using atomic microseconds since epoch.
  */
 class TimeManager {
 private:
-    std::chrono::steady_clock::time_point startTime;
-    std::chrono::steady_clock::time_point endTime;
+    std::atomic<int64_t> startTimeUs{0};
+    std::atomic<int64_t> endTimeUs{0};
     std::atomic<bool> testStarted{false};
     std::atomic<bool> testEnded{false};
-    mutable std::mutex timeMutex;
 
     // Private constructor for singleton pattern
     TimeManager() = default;
@@ -28,43 +27,42 @@ public:
 
     // Start the global timer
     void startTimer() {
-        std::lock_guard<std::mutex> lock(timeMutex);
         if (!testStarted.load(std::memory_order_acquire)) {
-            startTime = std::chrono::steady_clock::now();
+            auto now = std::chrono::steady_clock::now();
+            auto us = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
+            startTimeUs.store(us, std::memory_order_release);
             testStarted.store(true, std::memory_order_release);
         }
     }
 
     // End the global timer
     void endTimer() {
-        std::lock_guard<std::mutex> lock(timeMutex);
         if (testStarted.load(std::memory_order_acquire) && !testEnded.load(std::memory_order_acquire)) {
-            endTime = std::chrono::steady_clock::now();
+            auto now = std::chrono::steady_clock::now();
+            auto us = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
+            endTimeUs.store(us, std::memory_order_release);
             testEnded.store(true, std::memory_order_release);
         }
     }
 
     // Get elapsed time in seconds (double precision)
     double getElapsedSeconds() const {
-        std::lock_guard<std::mutex> lock(timeMutex);
         if (!testStarted.load(std::memory_order_acquire)) {
             return 0.0;
         }
 
-        auto currentTime = testEnded.load(std::memory_order_acquire) ? endTime : std::chrono::steady_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - startTime);
-        return duration.count() / 1000000.0; // Convert microseconds to seconds
+        int64_t start = startTimeUs.load(std::memory_order_acquire);
+        int64_t end = testEnded.load(std::memory_order_acquire) ? 
+            endTimeUs.load(std::memory_order_acquire) : 
+            std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+
+        int64_t diff = end - start;
+        return diff > 0 ? static_cast<double>(diff) / 1000000.0 : 0.0;
     }
 
     // Get elapsed time in milliseconds
     int64_t getElapsedMilliseconds() const {
-        std::lock_guard<std::mutex> lock(timeMutex);
-        if (!testStarted.load(std::memory_order_acquire)) {
-            return 0;
-        }
-
-        auto currentTime = testEnded.load(std::memory_order_acquire) ? endTime : std::chrono::steady_clock::now();
-        return std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
+        return static_cast<int64_t>(getElapsedSeconds() * 1000.0);
     }
 
     // Get elapsed time in integer seconds (for display purposes)
@@ -89,21 +87,22 @@ public:
 
     // Reset the timer (for testing purposes)
     void reset() {
-        std::lock_guard<std::mutex> lock(timeMutex);
         testStarted.store(false, std::memory_order_release);
         testEnded.store(false, std::memory_order_release);
+        startTimeUs.store(0, std::memory_order_release);
+        endTimeUs.store(0, std::memory_order_release);
     }
 
     // Get precise start time
     std::chrono::steady_clock::time_point getStartTime() const {
-        std::lock_guard<std::mutex> lock(timeMutex);
-        return startTime;
+        int64_t us = startTimeUs.load(std::memory_order_acquire);
+        return std::chrono::steady_clock::time_point(std::chrono::microseconds(us));
     }
 
     // Get precise end time
     std::chrono::steady_clock::time_point getEndTime() const {
-        std::lock_guard<std::mutex> lock(timeMutex);
-        return endTime;
+        int64_t us = endTimeUs.load(std::memory_order_acquire);
+        return std::chrono::steady_clock::time_point(std::chrono::microseconds(us));
     }
 
     // Compatibility cleanup function (resets state for existing test suites)

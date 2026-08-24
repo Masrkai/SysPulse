@@ -7,12 +7,11 @@
 #include <memory>
 #include <vector>
 
-#include "LinkedList.hpp"
 #include "TimeManager.hpp"
 
 class MemoryStressTest {
 private:
-    LinkedList<std::unique_ptr<std::vector<int>>> memoryBlocks;
+    std::vector<std::unique_ptr<std::vector<int>>> memoryBlocks;
 
     static constexpr int    MULTIPLIER = 2;                     // Memory multiplier for stress test (resulting in a 2 GB Max Allocation)
     static constexpr int    TEST_DURATION = 30;                 // seconds
