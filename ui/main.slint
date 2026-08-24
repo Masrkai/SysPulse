@@ -10,7 +10,7 @@ import { Panel } from "./panel.slint";
 export component StressTestWindow inherits Window {
     title: "SysPulse";
     width: 700px;
-    height: 640px;
+    height: 720px;
     background: #101010;
 
 
@@ -35,11 +35,21 @@ export component StressTestWindow inherits Window {
     in property <int> memory-target-mb: 0;
 
     in-out property <int> selected-duration-seconds: 30; // bound to the slider
+    in-out property <bool> is-single-core: false;
+
+    in property <bool> show-results: false;
+    in property <string> overall-score-display: "0 / 10000";
+    in property <string> alu-score-display: "ALU: 0";
+    in property <string> fpu-score-display: "FPU: 0";
+    in property <string> cache-score-display: "Cache: 0";
+    in property <string> crypto-score-display: "Crypto: 0";
+    in property <string> compression-score-display: "Compression: 0";
 
     // ---- events sent up to C++ --------------------------------------
     callback start-clicked();
     callback stop-clicked();
     callback duration-changed(int);
+    callback mode-changed(bool);
 
     VerticalLayout {
         padding: 20px;
@@ -193,6 +203,45 @@ export component StressTestWindow inherits Window {
                 font-size: 13px;
                 font-weight: 500;
                 vertical-alignment: center;
+            }
+        }
+
+        // Mode control — disabled once the test is running
+        HorizontalLayout {
+            spacing: 12px;
+            Text {
+                text: "Test Mode";
+                font-size: 13px;
+                color: #999999;
+                vertical-alignment: center;
+            }
+            Button {
+                text: is-single-core ? "Single-Core" : "Multi-Core";
+                enabled: !is-running;
+                clicked => {
+                    is-single-core = !is-single-core;
+                    mode-changed(is-single-core);
+                }
+            }
+        }
+
+        // Benchmark Results Panel (shown when test completes)
+        if show-results: Panel {
+            title: "Benchmark Results & Score Breakdown";
+            icon-color: ConsoleColors.magenta;
+            VerticalLayout {
+                spacing: 6px;
+                Text {
+                    text: "Overall Score: " + overall-score-display;
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: ConsoleColors.green;
+                }
+                Text { text: alu-score-display; font-size: 12px; color: #cccccc; }
+                Text { text: fpu-score-display; font-size: 12px; color: #cccccc; }
+                Text { text: cache-score-display; font-size: 12px; color: #cccccc; }
+                Text { text: crypto-score-display; font-size: 12px; color: #cccccc; }
+                Text { text: compression-score-display; font-size: 12px; color: #cccccc; }
             }
         }
     }

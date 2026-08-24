@@ -65,6 +65,9 @@ private:
         window->on_duration_changed([this](int seconds) {
             testDurationSeconds = seconds;
         });
+        window->on_mode_changed([this](bool isSingleCore) {
+            engine.setTestMode(isSingleCore ? CPUStressTest::TestMode::SingleCore : CPUStressTest::TestMode::MultiCore);
+        });
     }
 
     void pushStaticInfo() {
@@ -78,16 +81,20 @@ private:
         window->set_memory_allocated_mb(0);
         window->set_memory_target_mb(0);
         window->set_show_thread_event(false);
+        window->set_show_results(false);
+        window->set_is_single_core(false);
     }
 
     void onStart() {
         if (isRunning) return;
 
         engine.setTestDuration(testDurationSeconds);
+        engine.setTestMode(window->get_is_single_core() ? CPUStressTest::TestMode::SingleCore : CPUStressTest::TestMode::MultiCore);
         engine.initialize();
 
         window->set_core_count(engine.getCoreCount());
         window->set_test_duration_seconds(testDurationSeconds);
+        window->set_show_results(false);
 
         engine.start();
 
@@ -111,6 +118,28 @@ private:
         window->set_is_running(false);
         window->set_show_thread_event(false);
         if (updateTimer) updateTimer->stop();
+
+        // Populate benchmark results and scores
+        BenchmarkResults res = engine.getBenchmarkResults();
+        ScoreBreakdown score = engine.getScoreBreakdown();
+
+        std::ostringstream overallOut;
+        overallOut << std::fixed << std::setprecision(1) << score.overallScore << " / 10000";
+        window->set_overall_score_display(slint::SharedString(overallOut.str()));
+
+        std::ostringstream aluOut, fpuOut, cacheOut, cryptoOut, compOut;
+        aluOut << "ALU Score: " << std::fixed << std::setprecision(0) << score.aluScore << " (ALU: " << std::setprecision(1) << res.aluOpsPerSec / 1e6 << " M ops/s)";
+        fpuOut << "FPU Score: " << std::fixed << std::setprecision(0) << score.fpuScore << " (FPU: " << std::setprecision(1) << res.fpuOpsPerSec / 1e6 << " M ops/s)";
+        cacheOut << "Cache Score: " << std::fixed << std::setprecision(0) << score.cacheScore << " (Latency: " << std::setprecision(2) << res.cacheLatencyNs << " ns)";
+        cryptoOut << "Crypto Score: " << std::fixed << std::setprecision(0) << score.cryptoScore << " (Crypto: " << std::setprecision(1) << res.cryptoMbPerSec << " MB/s)";
+        compOut << "Compression Score: " << std::fixed << std::setprecision(0) << score.compressionScore << " (Comp: " << std::setprecision(1) << res.compressionMbPerSec << " MB/s)";
+
+        window->set_alu_score_display(slint::SharedString(aluOut.str()));
+        window->set_fpu_score_display(slint::SharedString(fpuOut.str()));
+        window->set_cache_score_display(slint::SharedString(cacheOut.str()));
+        window->set_crypto_score_display(slint::SharedString(cryptoOut.str()));
+        window->set_compression_score_display(slint::SharedString(compOut.str()));
+        window->set_show_results(true);
     }
 
     void startUpdateTimer() {
